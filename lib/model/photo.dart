@@ -1,29 +1,11 @@
-/// Photo 相片数据模型
-///
 class Photo {
-  /// Photo 私有数据成员
-  ///
-  /// 唯一标识号
   int _id;
-
-  ///   相片名
   String _name;
-
-  ///   原图片路径
   String _srcPath;
-
-  ///   缩略图路径
   String _thumbPath;
-
-  ///   创建时间
   String _createDate;
-
-  ///   修改时间
   String _modifyDate;
-
-  /// get set
-  ///
-  /// 私有数据 get
+  
   int get id => _id;
   String get name => _name;
   String get srcPath => _srcPath;
@@ -31,14 +13,11 @@ class Photo {
   String get createDate => _createDate;
   String get modifyDate => _modifyDate;
 
-  /// modifyDate set
   set modifyDate(String date) {
     _modifyDate = date;
   }
 
-  /// Photo 构造函数
   Photo(this._srcPath, this._thumbPath, this._createDate, this._modifyDate) {
-    // _name 按 path 自动构建
     _name = _srcPath.split('/').last;
   }
 
@@ -50,7 +29,7 @@ class Photo {
     this._createDate = obj['createDate'];
     this._modifyDate = obj['modifyDate'];
   }
-
+ 
   Map<String, dynamic> toMap() {
     var map = new Map<String, dynamic>();
     map['name'] = _name;
@@ -71,7 +50,7 @@ class Photo {
     map['modifyDate'] = _modifyDate;
     return map;
   }
-
+ 
   Photo.fromMap(Map<String, dynamic> map) {
     this._id = map['id'];
     this._name = map['name'];

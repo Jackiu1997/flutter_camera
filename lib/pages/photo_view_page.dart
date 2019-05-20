@@ -1,20 +1,14 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 
 import 'package:flutter_camera/model/photo.dart';
+import 'package:flutter_camera/pages/edit_page.dart';
 import 'package:flutter_camera/database/database_helper.dart';
-import 'package:flutter_camera/tools/photo_tools.dart';
-import 'package:flutter_camera/pages/crop_page.dart';
 
-/// 相片详情界面
-///
-///   用于完整原图相片的展示，采用 PhotoView 作为预览 Widget
-///   内部已经集成放大等基本操作
-///   由此界面可进入裁剪界面
-///
 class PhotoPage extends StatefulWidget {
   final int currentPage;
 
@@ -25,16 +19,10 @@ class PhotoPage extends StatefulWidget {
 }
 
 class _PhotoPageState extends State<PhotoPage> {
-  /// AppBar 和 BottomBar 是否隐藏控制
   var _hideBar = true;
 
-  /// 传入的当前浏览照片位置
   int _nowPage;
-
-  /// 相片数据列表
   var _photosData = List<Photo>();
-
-  /// PageView 控制器
   PageController _pageContorller;
 
   @override
@@ -43,13 +31,6 @@ class _PhotoPageState extends State<PhotoPage> {
     _updateImage();
     _nowPage = widget.currentPage;
     _pageContorller = PageController(initialPage: _nowPage);
-  }
-
-  @override
-  void dispose() {
-    _pageContorller?.dispose();
-    _photosData?.clear();
-    super.dispose();
   }
 
   @override
@@ -69,19 +50,13 @@ class _PhotoPageState extends State<PhotoPage> {
       ),
       backgroundColor: Colors.white10,
       body: GestureDetector(
-        child: _photosData.isEmpty
-            ? Text("")
-            : PageView.builder(
-                controller: _pageContorller,
-                itemCount: _photosData.length,
-                itemBuilder: (context, index) => PhotoView(
-                    imageProvider: FileImage(File(_photosData[index].srcPath))),
-                onPageChanged: (index) {
-                  setState(() {
-                    _nowPage = index;
-                  });
-                },
-              ),
+        child: PageView(
+          controller: _pageContorller,
+          onPageChanged: (index) {
+            _nowPage = index;
+          },
+          children: _buildImages(),
+        ),
         onTap: () {
           setState(() {
             _hideBar = !_hideBar;
@@ -99,18 +74,26 @@ class _PhotoPageState extends State<PhotoPage> {
     );
   }
 
-  /// 子Widget 控件
-  ///
-  /// 底部按钮 Widget
+  // Widget 控件
+  List<Widget> _buildImages() {
+    var images = List<Widget>();
+
+    _photosData.forEach((f) {
+      images.add(PhotoView(imageProvider: FileImage(File(f.srcPath))));
+    });
+
+    return images;
+  }
+
   Widget _bottomBarWidget() {
     return Row(
       children: <Widget>[
         Expanded(
           flex: 1,
           child: IconButton(
-            icon: Icon(Icons.content_cut),
-            tooltip: '裁剪',
-            onPressed: _onButtonCropPressed,
+            icon: Icon(Icons.mode_edit),
+            tooltip: '编辑',
+            onPressed: _onButtonEditPressed,
           ),
         ),
         Expanded(
@@ -133,26 +116,27 @@ class _PhotoPageState extends State<PhotoPage> {
     );
   }
 
-  /// 按钮响应
-  ///
-  /// 裁剪按钮响应（进入裁剪界面）
-  void _onButtonCropPressed() {
+  // 按钮响应函数
+  void _onButtonEditPressed() {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => CropPage(_photosData[_nowPage])));
-    setState(() {});
+            builder: (context) => EditPage(_photosData[_nowPage])));
   }
 
-  /// 显示相片信息按钮响应
-  void _onButtonInfoPressed() {
+  void _onButtonInfoPressed() async {
     var nowPhoto = _photosData[_nowPage];
-    // 显示弹出式 sheet 显示当前浏览图片数据
+    var completer = Completer<ui.Image>();
+    Image.asset(_photosData[_nowPage].srcPath)
+        .image
+        .resolve(ImageConfiguration())
+        .addListener((info, _) => completer.complete(info.image));
+
     showModalBottomSheet(
         context: context,
         builder: (builder) {
           return Container(
-            height: 300,
+            height: 200,
             padding: EdgeInsets.all(20.0),
             child: Center(
               child: Column(
@@ -161,8 +145,14 @@ class _PhotoPageState extends State<PhotoPage> {
                   Expanded(flex: 1, child: Text('照片名称：${nowPhoto.name}')),
                   Expanded(flex: 1, child: Text('拍摄时间：${nowPhoto.createDate}')),
                   Expanded(flex: 1, child: Text('修改时间：${nowPhoto.modifyDate}')),
-                  Expanded(flex: 2, child: Text('原图路径：${nowPhoto.srcPath}')),
-                  Expanded(flex: 2, child: Text('缩略图路径：${nowPhoto.thumbPath}')),
+                  Expanded(
+                    flex: 1,
+                    child: FutureBuilder<ui.Image>(
+                      future: completer.future,
+                      builder: (context, snapshot) => Text(
+                          '照片尺寸： ${snapshot.data.width} x ${snapshot.data.height}'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -170,17 +160,20 @@ class _PhotoPageState extends State<PhotoPage> {
         });
   }
 
-  /// 删除相片按钮响应
-  void _onButtonDeletePressed() {
-    var photo = _photosData[_nowPage];
+  void _onButtonDeletePressed() async {
+    var id = _photosData[_nowPage].id;
     setState(() {
-      _photosData.removeAt(_nowPage);
+       _photosData.removeAt(_nowPage);
     });
-    // 调用 photo_tools 中的删除功能
-    deletePhotoData(photo);
+    
+    var db = DatabaseHelper();
+    var photo = await db.getPhoto(id);
+    File(photo.srcPath).deleteSync();
+    File(photo.thumbPath).deleteSync();
+    db.deletePhoto(id);
   }
 
-  /// 更新显示图片数据
+  // 辅助功能函数
   Future _updateImage() async {
     var db = DatabaseHelper();
     _photosData = await db.getAllPhotos();

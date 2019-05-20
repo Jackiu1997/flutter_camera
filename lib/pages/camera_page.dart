@@ -7,10 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_camera/tools/photo_tools.dart';
 import 'package:flutter_camera/pages/album_page.dart';
 
-/// 相机主页面
-///
-///   用于进行照相操作，采用 camera 获取相机流数据
-///
 class CameraPage extends StatefulWidget {
   final List<CameraDescription> cameras;
 
@@ -22,49 +18,36 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> {
   CameraController controller;
+  String imagePath;
   int nowCamera = 1;
 
   @override
   void initState() {
     super.initState();
     _onButtonChangeCameraPressed();
-    checkNotInDBPhotos();
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: Scaffold(
-        body: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: <Widget>[
-            Container(
-              color: Colors.black,
-              child: _cameraPreViewWidget(),
-            ),
-            Positioned(
-              bottom: 18.0,
-              child: _bottomBarWidget(),
-            ),
-          ],
-        ),
+    return Scaffold(
+      body: Stack(
+        alignment: Alignment.center,
+        fit: StackFit.expand,
+        children: <Widget>[
+          Container(
+            color: Colors.black,
+            child: _cameraPreViewWidget(),
+          ),
+          Positioned(
+            bottom: 18.0,
+            child: _bottomBarWidget(),
+          ),
+        ],
       ),
-      onWillPop: () {
-        exit(0);
-      }
     );
   }
 
-  /// 子 Widget 定义
-  ///
-  /// 相机预览 Widget
+  // 子控件定义
   Widget _cameraPreViewWidget() {
     return Center(
       child: !controller.value.isInitialized
@@ -76,7 +59,6 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 
-  /// 页面底部按钮 Widget
   Widget _bottomBarWidget() {
     return SizedBox(
       width: 300,
@@ -117,15 +99,12 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 
-  /// 按钮事件响应
-  ///
-  /// 进入相册按钮响应
+  // 按钮事件响应
   void _onButtonOpenAlbumPressed() async {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => AlbumPage()));
   }
 
-  /// 拍照按钮响应
   void _onButtonTakePhotoPressed() async {
     if (!controller.value.isInitialized) {
       return null;
@@ -142,7 +121,6 @@ class _CameraPageState extends State<CameraPage> {
     createPhotoData(filePath);
   }
 
-  /// 转换摄像头按钮响应
   void _onButtonChangeCameraPressed() async {
     nowCamera = nowCamera == 0 ? 1 : 0;
     CameraDescription cameraDescription = widget.cameras[nowCamera];
@@ -157,6 +135,6 @@ class _CameraPageState extends State<CameraPage> {
     if (mounted) setState(() {});
   }
 
-  /// 生成当前时间戳，用作相片名称一部分
+  // 辅助函数
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 }

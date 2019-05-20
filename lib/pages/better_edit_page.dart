@@ -2,44 +2,30 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:image_crop/image_crop.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter_camera/model/photo.dart';
 import 'package:flutter_camera/tools/photo_tools.dart';
 
-/// 裁剪照片界面
-///
-///   进行相片的裁剪，目前有矩形框裁剪功能
-///   todo： 增加额外裁剪功能 如不同形状裁剪框
-///
-class CropPage extends StatefulWidget {
+class CutPage extends StatefulWidget {
   final Photo photo;
 
-  CropPage(this.photo, {Key key}) : super(key: key);
+  CutPage(this.photo, {Key key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => new _CropPageState();
+  State<StatefulWidget> createState() => new _CutPageState();
 }
 
-class _CropPageState extends State<CropPage> {
-  /// 传入的相片数据
+class _CutPageState extends State<CutPage> {
   Photo _photo;
-
-  /// 使用照片文件
   File _imgFile;
-
-  /// 裁剪页面所需 key
-  final cropKey = GlobalKey<CropState>();
+  File _croppedFile;
 
   @override
   void initState() {
     super.initState();
     _photo = widget.photo;
     _imgFile = File(_photo.srcPath);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    _croppedFile = _imgFile;
   }
 
   @override
@@ -48,7 +34,8 @@ class _CropPageState extends State<CropPage> {
       body: Center(
         child: Container(
           color: Colors.white,
-          child: Crop.file(_imgFile, key: cropKey),
+          height: MediaQuery.of(context).size.height,
+          child: Image.file(_croppedFile),
         ),
       ),
       bottomNavigationBar: Container(
@@ -80,26 +67,14 @@ class _CropPageState extends State<CropPage> {
     );
   }
 
-  /// 存储按钮响应
   void _onButtonSavePressed() async {
-    final scale = cropKey.currentState.scale;
-    final area = cropKey.currentState.area;
-    if (area == null) {
-      return;
-    }
-    final sample = await ImageCrop.sampleImage(
-      file: _imgFile,
-      preferredSize: (2000 / scale).round(),
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: _croppedFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
     );
-    final file = await ImageCrop.cropImage(
-      file: sample,
-      area: area,
-    );
-    sample.delete();
-
-    _imgFile.writeAsBytesSync(file.readAsBytesSync());
-    await updatePhotoData(_photo);
-
-    Navigator.pop(context);
+    setState(() {
+     _croppedFile = croppedFile; 
+    });
   }
 }
