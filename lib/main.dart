@@ -12,6 +12,8 @@ import 'package:flutter_camera/pages/camera_page.dart';
 List<CameraDescription> cameras;        
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   // 获取相机描述符
   cameras = await availableCameras();
 

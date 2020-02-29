@@ -19,4 +19,3 @@ A simple camera app built with Flutter and using sqlfite for SQLite storage.
 
 ![CutPage](screenshots/08.png)
 
-
