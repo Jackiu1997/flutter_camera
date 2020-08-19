@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -27,6 +28,11 @@ class _CameraPageState extends State<CameraPage> {
   @override
   void initState() {
     super.initState();
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft
+    ]);
+
     _onButtonChangeCameraPressed();
     checkNotInDBPhotos();
   }
@@ -34,6 +40,14 @@ class _CameraPageState extends State<CameraPage> {
   @override
   void dispose() {
     controller?.dispose();
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
     super.dispose();
   }
 
@@ -47,7 +61,10 @@ class _CameraPageState extends State<CameraPage> {
           children: <Widget>[
             Container(
               color: Colors.black,
-              child: _cameraPreViewWidget(),
+              child: RotatedBox(
+                quarterTurns: -1,
+                child: _cameraPreViewWidget(),
+              ),
             ),
             Positioned(
               bottom: 18.0,
@@ -57,8 +74,45 @@ class _CameraPageState extends State<CameraPage> {
         ),
       ),
       onWillPop: () {
-        exit(0);
-      }
+        SystemNavigator.pop();
+      },
+    );
+  }
+
+  Widget _buildPortraitScreen() {
+    return Stack(
+      alignment: Alignment.center,
+      fit: StackFit.expand,
+      children: <Widget>[
+        Container(
+          color: Colors.black,
+          child: _cameraPreViewWidget(),
+        ),
+        Positioned(
+          bottom: 18.0,
+          child: _bottomBarWidget(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeScreen() {
+    return Stack(
+      alignment: Alignment.center,
+      fit: StackFit.expand,
+      children: <Widget>[
+        Container(
+          color: Colors.black,
+          child: RotatedBox(
+            quarterTurns: 1,
+            child: _cameraPreViewWidget(),
+          ),
+        ),
+        Positioned(
+          right: 18.0,
+          child: _bottomBarWidget(),
+        ),
+      ],
     );
   }
 
