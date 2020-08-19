@@ -1,7 +1,7 @@
-# FlutterCamera
+# flutter_camera
 A simple camera app built with Flutter and using sqlfite for SQLite storage.
 
-# Relavent Screenshot
+## Relavent Screenshot
 
 ![SplashPage](screenshots/01.png)
 
@@ -18,5 +18,4 @@ A simple camera app built with Flutter and using sqlfite for SQLite storage.
 ![DetailPage](screenshots/07.png)
 
 ![CutPage](screenshots/08.png)
-
 

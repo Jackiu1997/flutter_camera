@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
+    <CLASSES>
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/compressimage-0.1.1" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/sqflite-1.3.1" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/path_provider_macos-0.0.4+3" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/path_provider-1.6.11" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/image_crop-0.3.2" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/camera-0.5.8+5" />
+      <root url="file://D:/Apps/Android/flutter/.pub-cache/hosted/pub.flutter-io.cn/path_provider_linux-0.0.1+2" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,18 +1,19 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_camera/pages/splash_page.dart';
 
-import 'package:flutter_camera/pages/camera_page.dart';
+import 'pages/camera_page.dart';
 
 
 // 相机描述符
-List<CameraDescription> cameras;        
+List<CameraDescription> cameras;
 
-void main() async {
+Future<void> main() async {
   // 获取相机描述符
+  WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
 
   // APP 页面： 页面主题设置等
@@ -51,64 +52,5 @@ void main() async {
     SystemUiOverlayStyle systemUiOverlayStyle =
         SystemUiOverlayStyle(statusBarColor: Colors.transparent);
     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-  }
-}
-
-/// 启动页
-/// 
-///   用于显示 APP 启动时的空白响应期
-/// 
-class SplashPage extends StatefulWidget {
-  @override
-  _SplashPageState createState() => _SplashPageState();
-}
-
-class _SplashPageState extends State<SplashPage> {
-  
-  // 启动延时操作，显示时间到后进入相机页面
-  startTime() async {
-    var _duration = Duration(seconds: 1);
-    return Timer(_duration, navigationPage);
-  }
-
-  void navigationPage() {
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => CameraPage(cameras)));
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    startTime();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        padding: EdgeInsets.symmetric(vertical: 150.0),
-        child: Center(
-          child: Column(
-            children: <Widget>[
-              Image.asset(
-                'assets/images/launch_image.png',
-                width: 200.0,
-                height: 200.0,
-              ),
-              Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text('Flutter Camera',
-                    style: Theme.of(context).textTheme.display2),
-              ),
-              Padding(
-                padding: EdgeInsets.all(5.0),
-                child: Text('Created By Jackiu',
-                    style: Theme.of(context).textTheme.display1),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
