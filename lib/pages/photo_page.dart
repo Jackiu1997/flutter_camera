@@ -26,13 +26,13 @@ class PhotoPage extends StatefulWidget {
 
 class _PhotoPageState extends State<PhotoPage> {
   /// AppBar 和 BottomBar 是否隐藏控制
-  var _hideBar = true;
+  var _hideBar = false;
 
   /// 传入的当前浏览照片位置
   int _nowPage;
 
   /// 相片数据列表
-  var _photosData = List<Photo>();
+  var _photosData = <Photo>[];
 
   /// PageView 控制器
   PageController _pageContorller;
@@ -55,46 +55,57 @@ class _PhotoPageState extends State<PhotoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize:
-            Size.fromHeight(MediaQuery.of(context).size.height * 0.08),
-        child: Offstage(
-          offstage: _hideBar,
-          child: AppBar(
-            title: Text("相册", style: Theme.of(context).textTheme.title),
-            backgroundColor: Theme.of(context).appBarTheme.color,
-            iconTheme: Theme.of(context).appBarTheme.iconTheme,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _hideBar = !_hideBar;
+                });
+              },
+              child: _photosData.isEmpty
+                  ? Container()
+                  : Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width,
+                      child: PageView.builder(
+                        controller: _pageContorller,
+                        itemCount: _photosData.length,
+                        itemBuilder: (context, index) => PhotoView(
+                            imageProvider:
+                                FileImage(File(_photosData[index].srcPath))),
+                        onPageChanged: (index) {
+                          setState(() {
+                            _nowPage = index;
+                          });
+                        },
+                      ),
+                    ),
+            ),
           ),
-        ),
-      ),
-      backgroundColor: Colors.white10,
-      body: GestureDetector(
-        child: _photosData.isEmpty
-            ? Text("")
-            : PageView.builder(
-                controller: _pageContorller,
-                itemCount: _photosData.length,
-                itemBuilder: (context, index) => PhotoView(
-                    imageProvider: FileImage(File(_photosData[index].srcPath))),
-                onPageChanged: (index) {
-                  setState(() {
-                    _nowPage = index;
-                  });
-                },
-              ),
-        onTap: () {
-          setState(() {
-            _hideBar = !_hideBar;
-          });
-        },
-      ),
-      bottomNavigationBar: Offstage(
-        offstage: _hideBar,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.08,
-          color: Theme.of(context).bottomAppBarColor,
-          child: _bottomBarWidget(),
-        ),
+          Positioned(
+            top: 0,
+            child: _hideBar
+                ? Container()
+                : Container(
+                    width: MediaQuery.of(context).size.width,
+                    child: AppBar(title: Text("相册")),
+                  ),
+          ),
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom,
+            child: _hideBar
+                ? Container()
+                : Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height * 0.08,
+                    color: Theme.of(context).bottomAppBarColor,
+                    child: _bottomBarWidget(),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -161,8 +172,8 @@ class _PhotoPageState extends State<PhotoPage> {
                   Expanded(flex: 1, child: Text('照片名称：${nowPhoto.name}')),
                   Expanded(flex: 1, child: Text('拍摄时间：${nowPhoto.createDate}')),
                   Expanded(flex: 1, child: Text('修改时间：${nowPhoto.modifyDate}')),
-                  Expanded(flex: 2, child: Text('原图路径：${nowPhoto.srcPath}')),
-                  Expanded(flex: 2, child: Text('缩略图路径：${nowPhoto.thumbPath}')),
+                  Expanded(flex: 1, child: Text('原图路径：${nowPhoto.srcPath}')),
+                  Expanded(flex: 1, child: Text('缩略图路径：${nowPhoto.thumbPath}')),
                 ],
               ),
             ),
@@ -182,8 +193,7 @@ class _PhotoPageState extends State<PhotoPage> {
 
   /// 更新显示图片数据
   Future _updateImage() async {
-    var db = DatabaseHelper();
-    _photosData = await db.getAllPhotos();
+    _photosData = await DatabaseHelper.to.getAllPhotos();
     setState(() {});
   }
 }

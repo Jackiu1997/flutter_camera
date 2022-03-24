@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:image_crop/image_crop.dart';
+import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter_camera/model/photo.dart';
 import 'package:flutter_camera/tools/photo_tools.dart';
 
@@ -28,7 +28,7 @@ class _CropPageState extends State<CropPage> {
   File _imgFile;
 
   /// 裁剪页面所需 key
-  final cropKey = GlobalKey<CropState>();
+  final _controller = CropController();
 
   @override
   void initState() {
@@ -45,61 +45,53 @@ class _CropPageState extends State<CropPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          color: Colors.white,
-          child: Crop.file(_imgFile, key: cropKey),
+      body: Container(
+        height: double.infinity,
+        width: MediaQuery.of(context).size.width,
+        color: Theme.of(context).backgroundColor,
+        child: Crop(
+          image: _imgFile.readAsBytesSync(),
+          controller: _controller,
+          onCropped: (image) async {
+            // do something with image data
+            _imgFile.writeAsBytesSync(image);
+            await updatePhotoData(_photo);
+            Navigator.pop(context);
+          },
+          interactive: true,
+          initialAreaBuilder: (rect) => Rect.fromLTRB(rect.left + 32,
+              rect.top + 100, rect.right - 32, rect.bottom - 100),
         ),
       ),
       bottomNavigationBar: Container(
+        width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height * 0.08,
         color: Theme.of(context).bottomAppBarColor,
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              flex: 1,
-              child: IconButton(
-                icon: Icon(Icons.save),
-                tooltip: '保存',
-                onPressed: _onButtonSavePressed,
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: IconButton(
-                icon: Icon(Icons.cancel),
-                tooltip: '取消',
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
-        ),
+        child: _bottomBarWidget(context),
       ),
     );
   }
 
-  /// 存储按钮响应
-  void _onButtonSavePressed() async {
-    final scale = cropKey.currentState.scale;
-    final area = cropKey.currentState.area;
-    if (area == null) {
-      return;
-    }
-    final sample = await ImageCrop.sampleImage(
-      file: _imgFile,
-      preferredSize: (2000 / scale).round(),
+  Row _bottomBarWidget(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          flex: 1,
+          child: IconButton(
+            icon: Icon(Icons.save),
+            tooltip: '保存',
+            onPressed: () => _controller.crop(),
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: IconButton(
+            icon: Icon(Icons.cancel),
+            tooltip: '取消',
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      ],
     );
-    final file = await ImageCrop.cropImage(
-      file: sample,
-      area: area,
-    );
-    sample.delete();
-
-    _imgFile.writeAsBytesSync(file.readAsBytesSync());
-    await updatePhotoData(_photo);
-
-    Navigator.pop(context);
   }
 }

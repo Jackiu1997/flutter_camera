@@ -12,20 +12,21 @@ import 'package:flutter_camera/model/photo.dart';
 ///   更新 Photo 数据
 ///   删除 Photo 数据
 ///   获取 Photo 数据等功能
-/// 
+///
 class DatabaseHelper {
-  static final DatabaseHelper _instance = new DatabaseHelper.internal();
-  factory DatabaseHelper() => _instance;
-  final String tableName = 'CameraPhotos';
+  // 设置数据库管理单例模式
+  DatabaseHelper._privateConstructor();
+  static final DatabaseHelper _instance = DatabaseHelper._privateConstructor();
+  static DatabaseHelper get to => _instance;
+
+  // 设置数据库连接单例模式
+  static final String tableName = 'CameraPhotos';
   static Database _db;
 
-  DatabaseHelper.internal();
-
   Future<Database> get db async {
-    if (_db != null) {
-      return _db;
+    if (_db == null) {
+      _db = await initDb();
     }
-    _db = await initDb();
     return _db;
   }
 
@@ -82,12 +83,12 @@ class DatabaseHelper {
   }
 
   /// 拓展的数据库功能
-  /// 
+  ///
   /// 获取所有 Photo 数据 （并按序号反序）
   Future<List<Photo>> getAllPhotos() async {
     var dbClient = await db;
-    List<Map> result = await dbClient.rawQuery('SELECT * FROM $tableName');
-    List<Photo> photos = List<Photo>();
+    var result = await dbClient.rawQuery('SELECT * FROM $tableName');
+    var photos = <Photo>[];
     for (int i = result.length - 1; i >= 0; i--) {
       photos.add(Photo.fromMap(result[i]));
     }

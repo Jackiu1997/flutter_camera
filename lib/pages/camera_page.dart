@@ -29,10 +29,6 @@ class _CameraPageState extends State<CameraPage> {
   void initState() {
     super.initState();
 
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft
-    ]);
-
     _onButtonChangeCameraPressed();
     checkNotInDBPhotos();
   }
@@ -41,12 +37,12 @@ class _CameraPageState extends State<CameraPage> {
   void dispose() {
     controller?.dispose();
 
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.portraitUp,
+    //   DeviceOrientation.portraitDown,
+    //   DeviceOrientation.landscapeLeft,
+    //   DeviceOrientation.landscapeRight,
+    // ]);
 
     super.dispose();
   }
@@ -61,10 +57,7 @@ class _CameraPageState extends State<CameraPage> {
           children: <Widget>[
             Container(
               color: Colors.black,
-              child: RotatedBox(
-                quarterTurns: -1,
-                child: _cameraPreViewWidget(),
-              ),
+              child: _cameraPreViewWidget(),
             ),
             Positioned(
               bottom: 18.0,
@@ -73,46 +66,7 @@ class _CameraPageState extends State<CameraPage> {
           ],
         ),
       ),
-      onWillPop: () {
-        SystemNavigator.pop();
-      },
-    );
-  }
-
-  Widget _buildPortraitScreen() {
-    return Stack(
-      alignment: Alignment.center,
-      fit: StackFit.expand,
-      children: <Widget>[
-        Container(
-          color: Colors.black,
-          child: _cameraPreViewWidget(),
-        ),
-        Positioned(
-          bottom: 18.0,
-          child: _bottomBarWidget(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLandscapeScreen() {
-    return Stack(
-      alignment: Alignment.center,
-      fit: StackFit.expand,
-      children: <Widget>[
-        Container(
-          color: Colors.black,
-          child: RotatedBox(
-            quarterTurns: 1,
-            child: _cameraPreViewWidget(),
-          ),
-        ),
-        Positioned(
-          right: 18.0,
-          child: _bottomBarWidget(),
-        ),
-      ],
+      onWillPop: () => SystemNavigator.pop(),
     );
   }
 
@@ -124,7 +78,10 @@ class _CameraPageState extends State<CameraPage> {
       child: !controller.value.isInitialized
           ? null
           : AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
+              aspectRatio:
+                  MediaQuery.of(context).orientation == Orientation.portrait
+                      ? 1 / controller.value.aspectRatio
+                      : controller.value.aspectRatio,
               child: CameraPreview(controller),
             ),
     );
@@ -132,42 +89,42 @@ class _CameraPageState extends State<CameraPage> {
 
   /// 页面底部按钮 Widget
   Widget _bottomBarWidget() {
+    var btnGroup = <Widget>[
+      Expanded(
+        flex: 1,
+        child: FloatingActionButton(
+          heroTag: "btn1",
+          child: Icon(Icons.photo),
+          backgroundColor: Color(0x50FFFFFF),
+          onPressed: _onButtonOpenAlbumPressed,
+        ),
+      ),
+      Expanded(
+        flex: 1,
+        child: FloatingActionButton(
+          heroTag: "btn2",
+          child: Icon(Icons.camera),
+          backgroundColor: Color(0x50FFFFFF),
+          onPressed: _onButtonTakePhotoPressed,
+        ),
+      ),
+      Expanded(
+        flex: 1,
+        child: FloatingActionButton(
+          heroTag: "btn3",
+          child: nowCamera == 0
+              ? Icon(Icons.camera_rear)
+              : Icon(Icons.camera_front),
+          backgroundColor: Color(0x50FFFFFF),
+          onPressed: _onButtonChangeCameraPressed,
+        ),
+      ),
+    ];
+
     return SizedBox(
       width: 300,
       height: 90,
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: FloatingActionButton(
-              heroTag: "btn1",
-              child: Icon(Icons.photo),
-              backgroundColor: Color(0x50FFFFFF),
-              onPressed: _onButtonOpenAlbumPressed,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: FloatingActionButton(
-              heroTag: "btn2",
-              child: Icon(Icons.camera),
-              backgroundColor: Color(0x50FFFFFF),
-              onPressed: _onButtonTakePhotoPressed,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: FloatingActionButton(
-              heroTag: "btn3",
-              child: nowCamera == 0
-                  ? Icon(Icons.camera_rear)
-                  : Icon(Icons.camera_front),
-              backgroundColor: Color(0x50FFFFFF),
-              onPressed: _onButtonChangeCameraPressed,
-            ),
-          ),
-        ],
-      ),
+      child: Row(children: btnGroup),
     );
   }
 
@@ -192,7 +149,8 @@ class _CameraPageState extends State<CameraPage> {
     if (controller.value.isTakingPicture) {
       return null;
     }
-    await controller.takePicture(filePath);
+    final image = await controller.takePicture();
+    image.saveTo(filePath);
     createPhotoData(filePath);
   }
 
